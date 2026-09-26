@@ -1,0 +1,28 @@
+services:
+  api:
+    build: .
+    image: intranet-cidr-allocator:latest
+    ports:
+      - "8000:8000"
+    environment:
+      # Parent CIDR of the address pool.
+      POOL_PARENT: "10.0.0.0/8"
+      # Comma-separated reserved subnets inside the parent (never allocated).
+      POOL_RESERVED: "10.0.0.0/16,10.1.0.0/16"
+      DB_PATH: "/data/pool.db"
+    volumes:
+      - pool-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=2)"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  pool-data:
